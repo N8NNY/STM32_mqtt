@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -28,6 +29,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ESP-01_STM32.h"
+#include "MQTTPacket.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +50,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+	char Rx[20];
+	char ate[] = "ATE0\r\n";
+	char at[] = "AT\r\n";
+	uint32_t count = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +64,13 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+	while(__HAL_UART_GET_FLAG(&huart3,UART_FLAG_TC)==RESET){}		
+	HAL_UART_Transmit(&huart3, (uint8_t*) Rx, strlen(Rx),1000);
+
+}
 
 /* USER CODE END 0 */
 
@@ -90,6 +102,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_UART4_Init();
@@ -97,35 +110,94 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	// INIT ESP-01
-	if(initESP01(&huart4)) 
+	while(!(initESP01(&huart4))) {
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		HAL_Delay(100);
+	}
+	// CLEAR RX
+	Rx[0] = 0;
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
-	
-	// CONNECTING to ... WIFI!
-	uint8_t i = 0;
-	while(i<3) {
-		if (connectWIFI("N8NNY","888888888")) {
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+	HAL_Delay(500);
+	// CONNECT TO ... WIFI!
+	while(!(connectWIFI("N8NNY","88888888"))) {
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_RESET);
-			break;
-		}
-		else
-			i++;
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+		Rx[0] = 0;
 	}
-	
-	// OPEN TCP
-	if(openTCPConnect("tailor.cloudmqtt.com",16347)) {
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+	// CLEAR RX
+	Rx[0] = 0;
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
-	}
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		HAL_Delay(500);
 	
-	// Send Packet! - CONNECT MQTT
-	//sprinf(CONNECT,"%x",)
-	//uint8_t state = sendData("",38);
+	
+	// OPEN TCP CONNECTION!
+	while(!(openTCPConnect("tailor.cloudmqtt.com", 16347))){
 		
+		if(!waitForString("ALREAY CONNECT",10,5000))
+			break;
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		Rx[0] = 0;
+	}
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		HAL_Delay(1000);
+	// CLEAR RX
+	Rx[0] = 0;
+	
+	//MAKE CONNECT!
+	
+	// Init Struct to Create Packect. 
+	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+	// Variable for Packect.
+	unsigned char buf[200];
+	// Length of buf.
+	int buflen = sizeof(buf);
+	// Don't know!
+	int msgid = 1;
+	int req_qos = 0;
+	// Struct for Name of Toppic!
+	MQTTString topicString = MQTTString_initializer;
+	// Text For Publish
+	char* payload = "HELLO N8NNY!!!!";
+	int payloadlen = strlen(payload);
+	// Text For Publish
+	
+	// Byte of Packet. 
+	uint16_t lenB = 0;
+	// SET INSTRUCTION CONNECT PACKET
+	data.clientID.cstring = "me";
+	data.keepAliveInterval = 20;
+	data.cleansession = 1;
+	data.username.cstring = "tizxinbp";
+	data.password.cstring = "u813eLQKHMrn";
+	// Create Packet to Connect...Server.
+	lenB = MQTTSerialize_connect(buf, buflen, &data);
+	// Send CONNECT Packet to...Server.
+	uint8_t check = sendData(buf, lenB);
+	Rx[0] = 0;
+
+	// Set Name TOPIC
+	topicString.cstring ="Test";
+	payloadlen = strlen(payload);
+	// Create Packet to PUBLISH!
+	lenB = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+	// Send PUBLISH to...Server.
+	uint8_t check1 = sendData(buf, lenB);
+	// CLEAR RX
+	Rx[0] = 0;
+	/*
+		
+	*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,10 +207,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
 		
-		
-			HAL_Delay(2000);
-		
+		switch (sendData(buf,lenB)) {
+			case 0:
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+					break;
+			case 2:
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_7,GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+					break;
+		}
+		// CLEAR RX
+		Rx[0] = 0;		
+		HAL_Delay(5000);
   }
   /* USER CODE END 3 */
 }
@@ -201,11 +288,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint32_t millis(){
-	return tik;
-}
 
-	
 /* USER CODE END 4 */
 
 /**

@@ -22,16 +22,27 @@ Dialog DLL:      TCM.DLL V1.36.2.0
  
 <h2>Project:</h2>
 C:\Users\N8NNY\Desktop\MAD\STM32_mqtt\stm32_esp8266\MDK-ARM\stm32_esp8266.uvprojx
-Project File Date:  11/22/2019
+Project File Date:  11/24/2019
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'stm32_esp8266'
 compiling main.c...
+../Src/main.c(186): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *"
+  	uint8_t check = sendData(buf, lenB);
+../Src/main.c(195): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *"
+  	uint8_t check1 = sendData(buf, lenB);
+../Src/main.c(214): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *"
+  		switch (sendData(buf,lenB)) {
+../Src/main.c(166): warning:  #177-D: variable "msgid"  was declared but never referenced
+  	int msgid = 1;
+../Src/main.c(167): warning:  #177-D: variable "req_qos"  was declared but never referenced
+  	int req_qos = 0;
+../Src/main.c: 5 warnings, 0 errors
 linking...
-Program Size: Code=10248 RO-data=560 RW-data=24 ZI-data=1416  
+Program Size: Code=13016 RO-data=656 RW-data=20 ZI-data=1532  
 FromELF: creating hex file...
-"stm32_esp8266\stm32_esp8266.axf" - 0 Error(s), 0 Warning(s).
+"stm32_esp8266\stm32_esp8266.axf" - 0 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 

@@ -40,3 +40,12 @@ stm32_esp8266\esp-01_stm32.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_esp8266\esp-01_stm32.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 stm32_esp8266\esp-01_stm32.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_esp8266\esp-01_stm32.o: ../Inc/usart.h
+stm32_esp8266\esp-01_stm32.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTPacket.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTConnect.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTPublish.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTSubscribe.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTUnsubscribe.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTFormat.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\StackTrace.h
+stm32_esp8266\esp-01_stm32.o: ..\..\MQTTPacket\src\MQTTPacket.h

@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 extern UART_HandleTypeDef *uart_ESP01;
+extern char Rx[20];
 
 //Save UART Object
 bool initESP01(UART_HandleTypeDef*);
@@ -19,7 +20,7 @@ bool connectWIFI(char* ssid, char* pw);
 //Establishes TCP Connection
 bool openTCPConnect(char* domain, uint16_t port);
 //Send Message
-int sendData(char *buf, int blen);
+int sendData(char *buf, uint16_t blen);
 //Wait for specific input string until timeout runs out
 bool waitForString(char* input, int length, unsigned int timeout);
 #endif /* ESP-01_STM32_H */
